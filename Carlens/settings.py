@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+from decouple import config
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,11 +28,12 @@ SECRET_KEY = 'django-insecure-6xwl%!ot$yj0-hx6jv7*gss^_xok_rycwuvox_f6p33-z78t#f
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "10.10.13.75"
+    "10.10.13.75",
+    "overrigged-botanically-lila.ngrok-free.dev",
 ]
 
-
-
+STRIPE_SECRET_KEY=config('STRIPE_SECRET_KEY')
+WEBHOOK_SECRET=config('WEBHOOK_SECRET')
 # Application definition
 
 INSTALLED_APPS = [
@@ -44,7 +47,7 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    
+    'booked',
 ]
 
 MIDDLEWARE = [

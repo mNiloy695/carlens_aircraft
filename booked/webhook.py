@@ -2,7 +2,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from django.conf import settings
 import stripe
-
+from .views import CancelPaymentView
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -26,6 +26,7 @@ def stripe_webhook(request):
     event_type = event["type"]
     payment_intent = event["data"]["object"]
     if event_type=="payment_intent.created":
+        id=payment_intent["id"]
         print("payment intent created")
 
     if event_type == "payment_intent.amount_capturable_updated":

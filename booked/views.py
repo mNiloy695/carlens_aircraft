@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 import stripe
-
+from rest_framework.permissions import IsAuthenticated
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 #capture 
@@ -31,12 +31,61 @@ class CancelPaymentView(APIView):
 
 
 class CheckOutView(APIView):
+    permission_classes=[IsAuthenticated]
     def post(self, request):
-        amount = request.data.get("amount")
+        data=request.data
+        amount = data.get("amount",None)
+        operator_id=data.get('operator_id',None)
+        aircraft_id=data.get('aircraft_id',None)
+        flight_date=data.get('flight_date',None)
+        passengers=data.get('passengers',None)
+        form=data.get('form',None)
+        to=data.get('to',None)
+        currency=data.get('currency',None)
 
         if amount is None:
             return Response(
                 {"amount": "Amount field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if operator_id is None:
+            return Response(
+                {"operator_id": "Operator id field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if aircraft_id is None:
+             return Response(
+                {"aircraft_id": "Aircraft id field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if flight_date is None:
+             return Response(
+                {"flight_date": "Flight date field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if passengers is None:
+             return Response(
+                {"passengers": "Passengers field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if form is None:
+             return Response(
+                {"form": "Form field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if to is None:
+             return Response(
+                {"to": "To field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if currency is None:
+             return Response(
+                {"currency": "Currency field is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -56,7 +105,7 @@ class CheckOutView(APIView):
 
         intent = stripe.PaymentIntent.create(
             amount=amount,
-            currency="usd",
+            currency=currency,
             capture_method="manual",  # 🔐 ESCROW HOLD
             automatic_payment_methods={"enabled": True},
 

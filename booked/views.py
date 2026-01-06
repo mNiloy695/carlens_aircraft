@@ -4,8 +4,9 @@ from rest_framework import status
 from django.conf import settings
 import stripe
 from rest_framework.permissions import IsAuthenticated
+from .serializers import BookedModelSerializer
 stripe.api_key = settings.STRIPE_SECRET_KEY
-
+from .models import BookedModel
 #capture 
 
 class CapturePaymentView(APIView):
@@ -30,6 +31,19 @@ class CancelPaymentView(APIView):
         return Response({"status": "cancelled"}, status=200)
 
 
+class BookedModelView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        booked_request=BookedModel.objects.all()
+        if not request.user.is_staff:
+            booked_request=booked_request.filter(user=request.user)
+        serializer=BookedModelSerializer(booked_request,many=True)
+        return Response(serializer.data)
+
+
+
+
+
 class CheckOutView(APIView):
     permission_classes=[IsAuthenticated]
     def post(self, request):
@@ -42,6 +56,14 @@ class CheckOutView(APIView):
         form=data.get('form',None)
         to=data.get('to',None)
         currency=data.get('currency',None)
+        booking_id=data.get('booking_id',None)
+
+        if booking_id is None:
+            return Response(
+                {"booking_id": "Booking id field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
         if amount is None:
             return Response(
@@ -112,6 +134,16 @@ class CheckOutView(APIView):
             metadata={
                 "booking_id": request.data.get("booking_id", ""),
                 "user_id": request.user.id if request.user.is_authenticated else "",
+                "amount":amount,
+                "operator_id":operator_id,
+                "aircraft_id":aircraft_id,
+                "form":form,
+                "to":to,
+                "passengers":passengers,
+                "amount":amount,
+                "currency":currency,
+                "flight_date":flight_date
+
             },
         )
 

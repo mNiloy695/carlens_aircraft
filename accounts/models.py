@@ -45,3 +45,31 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
    
         
 
+from django.contrib.auth import get_user_model
+User= get_user_model()
+
+class OTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    type=models.CharField(max_length=20,choices=[('registration','registration'),('password_reset','password_reset')],default='registration')
+    
+    def is_expired(self):
+        from django.utils import timezone
+        expiration_time = self.created_at + timezone.timedelta(minutes=10)
+        return timezone.now() > expiration_time
+
+    def __str__(self):
+        return f"OTP for {self.user.email} - {self.code}"
+
+
+
+
+
+
+class UserProfile(models.Model):
+    user=models.OneToOneField(CustomUser,on_delete=models.CASCADE,related_name='profile')
+    full_name=models.CharField(max_length=50)
+    avatar=models.ImageField(upload_to='profile',null=True,blank=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    updated_at=models.DateTimeField(auto_now=True)

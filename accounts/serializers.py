@@ -112,3 +112,28 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+
+
+class UserAccountActivationSerializer(serializers.Serializer):
+    email= serializers.EmailField()
+    code= serializers.CharField(max_length=6)
+    def validate(self, attrs):
+        email= attrs.get('email')
+        code= attrs.get('code')
+        try:
+            user= User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with this email does not exist")
+        
+        from .models import OTP
+        if not OTP.objects.filter(user=user, code=code, type='registration').exists():
+            raise serializers.ValidationError("Invalid verification code")
+        else:
+            otp= OTP.objects.get(user=user, code=code, type='registration')
+            if otp.is_expired():
+                raise serializers.ValidationError("Verification code has expired")
+        
+        attrs['user']= user
+        return attrs

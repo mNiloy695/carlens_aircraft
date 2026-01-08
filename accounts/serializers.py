@@ -79,8 +79,7 @@ class LoginSerializer(serializers.Serializer):
         email_or_phone = attrs.get('email_or_phone')
         password = attrs.get('password')
         country_code = attrs.get('country_code')
-        if not country_code:
-            raise serializers.ValidationError({"error":"Country code is required"})
+       
 
         if not email_or_phone or not password:
             raise serializers.ValidationError({"error":"Email/Phone and password are required"})
@@ -93,6 +92,10 @@ class LoginSerializer(serializers.Serializer):
             is_email = True
         except DjangoValidationError:
             is_email = False
+        
+        if not is_email:
+          if not country_code:
+            raise serializers.ValidationError({"error":"Country code is required"})
 
         try:
             if is_email:
@@ -136,4 +139,29 @@ class UserAccountActivationSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Verification code has expired")
         
         attrs['user']= user
+        return attrs
+    
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        if not email:
+            raise serializers.ValidationError({"email": "Email is required."})
+        return attrs
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email=serializers.EmailField()
+    code=serializers.CharField()
+    password=serializers.CharField()
+
+    def validate(self, attrs):
+        email=attrs.get('email')
+        code=attrs.get('code')
+        password=attrs.get('password')
+
+        if any(x is None for x in [email,code,password]):
+            raise serializers.ValidationError("Email, code, and password are required.")
         return attrs
